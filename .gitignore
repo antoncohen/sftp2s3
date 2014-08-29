@@ -1,0 +1,19 @@
+# Mac OS X
+.DS_Store
+_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+# Files that might appear on external disk
+.Spotlight-V100
+.Trashes
+
+# vim
+.*.s[a-w][a-z]
+*.un~
+Session.vim
+.netrwhist
+*~
