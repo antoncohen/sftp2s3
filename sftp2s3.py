@@ -44,7 +44,6 @@ import paramiko
 from paramiko.ssh_exception import SSHException
 
 #TODO(antoncohen) support SSH key auth
-#TODO(antoncohen) fix docstring returns
 
 
 class FastTransport(paramiko.Transport):
