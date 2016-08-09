@@ -43,8 +43,6 @@ from boto.utils import compute_md5
 import paramiko
 from paramiko.ssh_exception import SSHException
 
-#TODO(antoncohen) support SSH key auth
-
 
 class FastTransport(paramiko.Transport):
     """
@@ -84,6 +82,10 @@ def arg_parser():
                         default=os.environ.get('SFTP2S3_SFTP_PASSWORD'),
                         help="""SFTP password,
                         default=env variable SFTP2S3_SFTP_PASSWORD""")
+    parser.add_argument('--pkey',
+                        default=os.environ.get('SFTP2S3_SFTP_PKEY'),
+                        help="""SFTP private key,
+                        default=env variable SFTP2S3_SFTP_PKEY""")
     parser.add_argument('--basepath', default='',
                         help="SFTP base directory")
     parser.add_argument('--pathmatch', default=r'.*',
@@ -354,7 +356,7 @@ def delete_from_sftp(sftp, fullpath, orig_md5, s3bucket, s3path, delete=False):
         logging.error('ERROR in delete_from_sftp, this code should never run.')
 
 
-def sftp_connect(host, port, username, password):
+def sftp_connect(host, port, username, password=None, pkey=None):
     """Connects to SFTP and returns an SSH connection and SFTP client.
     Retries the SSH connection 10 times with a 5 second timeout per attempt.
 
@@ -370,6 +372,9 @@ def sftp_connect(host, port, username, password):
     :param password: SFTP password.
     :type password: str
 
+    :param pkey: SFTP private key path.
+    :type pkey: str
+
     :returns: SSH connection and SFTP client
     :rtype: paramiko.SSHClient, paramiko.SFTPClient
     """
@@ -379,7 +384,10 @@ def sftp_connect(host, port, username, password):
     for count in range(tries):
         try:
             ssh_conn = FastTransport((host, port))
-            ssh_conn.connect(username=username, password=password)
+            pkey_content = None
+            if pkey is not None:
+                pkey_content = paramiko.RSAKey.from_private_key_file(filename=pkey)
+            ssh_conn.connect(username=username, password=password, pkey=pkey_content)
             sftp = paramiko.SFTPClient.from_transport(ssh_conn)
         except SSHException as e:
             if 'timed out' in e.__str():
@@ -456,7 +464,8 @@ def main():
     try:
         # SFTP Connect
         ssh_conn, sftp = sftp_connect(args['host'], args['port'],
-                                      args['username'], args['password'])
+                                      args['username'], password=args['password'],
+                                      pkey=args['pkey'])
 
         # S3 Connect
         s3 = boto.connect_s3(args['awskey'], args['awssecret'])
