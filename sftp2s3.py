@@ -112,6 +112,8 @@ def arg_parser():
                                                'error', 'critical'],
                         default='warning',
                         help="Log level, default=warning")
+    parser.add_argument('--logfile', default=None,
+                        help="Log file to save logging output.")
 
     return vars(parser.parse_args())
 
@@ -457,7 +459,7 @@ def main():
     args = arg_parser()
 
     loglevel = getattr(logging, args['loglevel'].upper(), None)
-    logging.basicConfig(level=loglevel)
+    logging.basicConfig(filename=args['logfile'], format='%(asctime)s %(message)s', level=loglevel)
 
     logging.debug('Args: ' + str(args))
 
